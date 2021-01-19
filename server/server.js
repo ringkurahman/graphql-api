@@ -14,29 +14,72 @@ const connectDB = require('./config/db')
 // Connect Database
 connectDB()
 
-
 app.use(bodyParser.json())
 app.get('/playground', expressPlayground({ endpoint: '/graphql' }))
 
+
+const User = require('./models/User')
 
 app.use(
     '/graphql',
     graphqlHTTP({
         schema:buildSchema(`
             type RootQuery {
-                hello: String!
+                user(id:ID!): User!
             }
+
             type RootMutation{
-                somemutation:String
+                addUser(userInput:UserInput!): User!
             }
+
+            type User {
+                _id: ID!
+                name: String!
+                email: String!
+                password: String!
+                role: String
+            }
+
+            input UserInput {
+                name: String!
+                email: String!
+                password: String!
+                role: String
+            }
+
             schema {
                 query: RootQuery
                 mutation: RootMutation
             }
         `),
-        rootValue:{
-            hello:()=>{
-                return 'Hello back!!'
+        rootValue: {
+            // Get new user by id
+            user: async args => {
+                try {
+                    const user = await User.findOne({ _id: args.id })
+                    return { ...user._doc }
+
+                } catch (err) {
+                    throw err
+                }
+            },
+            // Create new user
+            addUser: async args => {
+                try {
+                    const user = new User({
+                        name: args.userInput.name,
+                        email: args.userInput.email,
+                        password: args.userInput.password,
+                        role: args.userInput.role
+                    })
+
+                    const result = await user.save()
+
+                    return { ...result._doc }
+
+                } catch (err) {
+                    throw err
+                }
             }
         },
         graphiql: true
