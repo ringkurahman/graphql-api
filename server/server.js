@@ -1,13 +1,23 @@
 const express = require('express')
 const app = express()
+
 const { graphqlHTTP } = require('express-graphql')
 const bodyParser = require('body-parser')
 const { buildSchema } = require('graphql')
 const expressPlayground = require('graphql-playground-middleware-express').default
 
+const mongoose = require('mongoose')
+const errorHandler = require('./middleware/error')
+const colors = require('colors')
+const connectDB = require('./config/db')
+
+// Connect Database
+connectDB()
+
 
 app.use(bodyParser.json())
-app.get('/playground',expressPlayground({endpoint: '/graphql'}))
+app.get('/playground', expressPlayground({ endpoint: '/graphql' }))
+
 
 app.use(
     '/graphql',
@@ -33,8 +43,20 @@ app.use(
     })
 )
 
+// Error Handler
+app.use(errorHandler)
+
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT,()=>{
-    console.log(`Running running on port ${PORT}`)
-});
+
+app.listen( PORT, console.log(`Running running on port ${PORT}`.yellow.bold))
+
+
+
+// Handle unhandled rejection from database
+process.on('unhandledRejection', (err, promise) => {
+    console.log(`Error: ${err.message}`.red)
+    // Close server and exit process
+    server.close(() => process.exit(1))
+})
+
