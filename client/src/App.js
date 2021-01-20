@@ -5,8 +5,8 @@ import axios from 'axios'
 const addUserHandler = () => {
 
   const userData = {
-    name: 'Demo User2',
-    email: 'demo2@gmail.com',
+    name: 'Raiyaan Rahman',
+    email: 'demo@gmail.com',
     password: '1234567'
   }
 
